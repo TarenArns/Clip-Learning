@@ -72,14 +72,14 @@ export default function Home() {
   };
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gray-950 p-8">
       <Tabs className="flex justify-center mb-8" radius="full" size="lg">
         <Tab key="clip" title="Clip" />
         <Tab key="review" title="Review" />
       </Tabs>
 
       <div className="max-w-6xl mx-auto">
-        <div className="bg-black rounded-lg overflow-hidden">
+        <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
           <video 
             ref={videoRef}
             className="w-full aspect-video"
@@ -89,20 +89,20 @@ export default function Home() {
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
           />
           
-          <div className="bg-gray-900 p-4">
+          <div className="bg-gray-800 p-4">
             <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
-              <div className="absolute h-full bg-gray-400 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
+              <div className="absolute h-full bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
               
               {isClipping && (
                 <div 
-                  className="absolute h-full bg-blue-500 pointer-events-none"
+                  className="absolute h-full bg-blue-600 pointer-events-none"
                   style={{
                     left: `${(clipStart / duration) * 100}%`,
                     width: `${((clipEnd - clipStart) / duration) * 100}%`
                   }}
                 >
                   <div 
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize pointer-events-auto"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -124,7 +124,7 @@ export default function Home() {
                     }}
                   />
                   <div 
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize pointer-events-auto"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -149,36 +149,38 @@ export default function Home() {
               )}
             </div>
             
-            <div className="flex items-center gap-4 text-white">
-              <button onClick={togglePlay} className="hover:text-blue-400">
+            <div className="flex items-center gap-4 text-gray-200">
+              <button onClick={togglePlay} className="hover:text-white transition-colors">
                 {isPlaying ? '⏸' : '▶'}
               </button>
               <span className="text-sm">{formatTime(currentTime)} / {formatTime(duration)}</span>
-              <button onClick={cycleSpeed} className="text-sm hover:text-blue-400">{playbackRate}x</button>
+              <button onClick={cycleSpeed} className="text-sm hover:text-white transition-colors">{playbackRate}x</button>
             </div>
           </div>
         </div>
         
-        <div className="flex justify-end gap-2 mb-8">
+        <div className="flex justify-end gap-2 my-6">
           <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Clip</Button>
           <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Annotate</Button>
           <Button color="success" onPress={handleSave} isDisabled={!isClipping}>Save</Button>
-          <Button color="danger" variant="light" onPress={() => setIsClipping(false)} isDisabled={!isClipping}>Cancel</Button>
+          <Button color="danger" variant="flat" onPress={() => setIsClipping(false)} isDisabled={!isClipping}>Cancel</Button>
         </div>
 
-        <Card className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Clips</h3>
-          {clips.length === 0 ? (
-            <div className="text-gray-500 text-center py-8">No clips yet</div>
-          ) : (
-            <div className="space-y-2">
-              {clips.map((clip, i) => (
-                <div key={i} className="p-3 bg-gray-100 rounded">
-                  {formatTime(clip.start)} - {formatTime(clip.end)}
-                </div>
-              ))}
-            </div>
-          )}
+        <Card className="bg-gray-900 border-gray-800">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-100">Clips</h3>
+            {clips.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">No clips yet</div>
+            ) : (
+              <div className="space-y-2">
+                {clips.map((clip, i) => (
+                  <div key={i} className="p-3 bg-gray-800 rounded text-gray-200">
+                    {formatTime(clip.start)} - {formatTime(clip.end)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Card>
       </div>
     </div>
