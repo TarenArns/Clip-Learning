@@ -1,19 +1,22 @@
 'use client';
 
-import { Tabs, Tab, Button, Card } from "@heroui/react";
+import { Tabs, Tab, Button, Card, Modal, ModalContent } from "@heroui/react";
 import { useState, useRef, useEffect } from "react";
+import ClipModalCard from "../components/ClipModal";
 
 export default function Home() {
   const [isClipping, setIsClipping] = useState(false);
   const [clipStart, setClipStart] = useState(0);
   const [clipEnd, setClipEnd] = useState(5);
-  const [clips, setClips] = useState<{start: number, end: number, type: string}[]>([]);
+  const [clips, setClips] = useState<{ start: number, end: number, type: string }[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [thumbnail, setThumbnail] = useState("");
 
   useEffect(() => {
     if (videoRef.current) {
@@ -31,8 +34,28 @@ export default function Home() {
   };
 
   const handleSave = () => {
-    setClips([...clips, { start: clipStart, end: clipEnd, type: isClipping ? 'clip' : 'annotation' }]);
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      const currentTime = videoRef.current.currentTime;
+      videoRef.current.currentTime = clipStart;
+      videoRef.current.onseeked = () => {
+        ctx?.drawImage(videoRef.current!, 0, 0, canvas.width, canvas.height);
+        setThumbnail(canvas.toDataURL());
+        videoRef.current!.currentTime = currentTime;
+        videoRef.current!.onseeked = null;
+        setShowModal(true);
+      };
+    }
+  };
+
+  const handleModalSave = (title: string, tags: string, description: string) => {
+    setClips([...clips, { start: clipStart, end: clipEnd, type: 'clip', title, tags, description, thumbnail }]);
     setIsClipping(false);
+    setShowModal(false);
+    setThumbnail("");
   };
 
   const formatTime = (seconds: number) => {
@@ -80,7 +103,7 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto">
         <div className="bg-gray-900 rounded-lg overflow-hidden shadow-xl">
-          <video 
+          <video
             ref={videoRef}
             className="w-full aspect-video"
             src="/01-FieldStudiesI.mp4"
@@ -88,20 +111,20 @@ export default function Home() {
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
           />
-          
+
           <div className="bg-gray-800 p-4">
             <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
               <div className="absolute h-full bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
-              
+
               {isClipping && (
-                <div 
+                <div
                   className="absolute h-full bg-blue-600 pointer-events-none"
                   style={{
                     left: `${(clipStart / duration) * 100}%`,
                     width: `${((clipEnd - clipStart) / duration) * 100}%`
                   }}
                 >
-                  <div 
+                  <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
@@ -123,7 +146,7 @@ export default function Home() {
                       document.addEventListener('mouseup', onUp);
                     }}
                   />
-                  <div 
+                  <div
                     className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
@@ -148,7 +171,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center gap-4 text-gray-200">
               <button onClick={togglePlay} className="hover:text-white transition-colors">
                 {isPlaying ? '⏸' : '▶'}
@@ -158,7 +181,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-2 my-6">
           <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Clip</Button>
           <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Annotate</Button>
@@ -183,6 +206,19 @@ export default function Home() {
           </div>
         </Card>
       </div>
+
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="md" className="bg-gray-900 p-0">
+        <ModalContent>
+          <ClipModalCard
+            thumbnail={thumbnail}
+            clipStart={clipStart}
+            clipEnd={clipEnd}
+            formatTime={formatTime}
+            onSave={handleModalSave}
+            onCancel={() => setShowModal(false)}
+          />
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
