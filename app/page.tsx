@@ -8,7 +8,7 @@ export default function Home() {
   const [isClipping, setIsClipping] = useState(false);
   const [clipStart, setClipStart] = useState(0);
   const [clipEnd, setClipEnd] = useState(5);
-  const [clips, setClips] = useState<{ start: number, end: number, type: string }[]>([]);
+  const [clips, setClips] = useState<{ start: number, end: number, type: string, title: string, tags: string, description: string, thumbnail: string }[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState(0);
@@ -197,8 +197,14 @@ export default function Home() {
             ) : (
               <div className="space-y-2">
                 {clips.map((clip, i) => (
-                  <div key={i} className="p-3 bg-gray-800 rounded text-gray-200">
-                    {formatTime(clip.start)} - {formatTime(clip.end)}
+                  <div key={i} className="flex gap-3 p-3 bg-gray-800 rounded text-gray-200">
+                    <img src={clip.thumbnail} alt="Clip thumbnail" className="w-48 h-32 object-cover rounded" />
+                    <div className="flex-col col-gap-1">
+                      <h4 className="font-semibold">{clip.title}</h4>
+                      <p className="text-sm text-gray-400">{clip.tags}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>
+                    </div>
+                    <p className="text-sm text-gray-300">{clip.description}</p>
                   </div>
                 ))}
               </div>
