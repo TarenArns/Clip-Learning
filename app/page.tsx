@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, Tab, Button, Card } from "@heroui/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Home() {
   const [isClipping, setIsClipping] = useState(false);
@@ -14,6 +14,12 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  }, []);
 
   const handleClip = () => {
     if (videoRef.current) {
@@ -77,11 +83,11 @@ export default function Home() {
           <video 
             ref={videoRef}
             className="w-full aspect-video"
+            src="/01-FieldStudiesI.mp4"
+            preload="metadata"
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-          >
-            <source src="/01-FieldStudiesI.mp4" type="video/mp4" />
-          </video>
+          />
           
           <div className="bg-gray-900 p-4">
             <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
@@ -89,14 +95,14 @@ export default function Home() {
               
               {isClipping && (
                 <div 
-                  className="absolute h-full bg-blue-500"
+                  className="absolute h-full bg-blue-500 pointer-events-none"
                   style={{
                     left: `${(clipStart / duration) * 100}%`,
                     width: `${((clipEnd - clipStart) / duration) * 100}%`
                   }}
                 >
                   <div 
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -118,7 +124,7 @@ export default function Home() {
                     }}
                   />
                   <div 
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-700 rounded cursor-ew-resize pointer-events-auto"
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
