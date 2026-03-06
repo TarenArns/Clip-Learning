@@ -1,6 +1,6 @@
 'use client';
 
-import { Tabs, Tab, Button, Card, Modal, ModalContent } from "@heroui/react";
+import { Tabs, Tab, Button, Card, Modal, ModalContent, Accordion, AccordionItem } from "@heroui/react";
 import { useState, useRef, useEffect } from "react";
 import ClipModalCard from "../components/ClipModal";
 
@@ -227,19 +227,30 @@ export default function Home() {
             {clips.length === 0 ? (
               <div className="text-gray-500 text-center py-8">No clips yet</div>
             ) : (
-              <div className="space-y-2">
+              <Accordion variant="splitted">
                 {clips.map((clip, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-gray-800 rounded text-gray-200">
-                    <img src={clip.thumbnail} alt="Clip thumbnail" className="w-48 h-32 object-cover rounded" />
-                    <div className="flex-col col-gap-1">
-                      <h4 className="font-semibold">{clip.title}</h4>
-                      <p className="text-sm text-gray-400">{clip.tags}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>
+                  <AccordionItem
+                    key={i}
+                    indicator={<div className="text-6xl cursor-pointer">&lt;</div>}
+                    title={
+                      <div className="flex gap-3 items-start w-full cursor-pointer">
+                        <img src={clip.thumbnail} alt="Clip thumbnail" className="w-48 h-32 object-cover rounded" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{clip.title}</h4>
+                          <p className="text-sm text-gray-400">{clip.tags}</p>
+                          <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>
+                          <p className="text-sm text-gray-300 mt-2 text-left">{clip.description}</p>
+                        </div>
+                      </div>
+                    }
+                    className="bg-gray-800 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center">
+                      <img src={clip.thumbnail} alt="Clip thumbnail" className="w-[80%] rounded" />
                     </div>
-                    <p className="text-sm text-gray-300">{clip.description}</p>
-                  </div>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
             )}
           </div>
         </Card>
