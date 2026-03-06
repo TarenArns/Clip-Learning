@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, Input, Textarea, CardFooter, Button } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ClipModalCardProps {
   thumbnail: string;
@@ -10,12 +10,21 @@ interface ClipModalCardProps {
   formatTime: (seconds: number) => string;
   onSave: (title: string, tags: string, description: string) => void;
   onCancel: () => void;
+  initialTitle?: string;
+  initialTags?: string;
+  initialDescription?: string;
 }
 
-export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTime, onSave, onCancel }: ClipModalCardProps) {
-  const [clipTitle, setClipTitle] = useState("");
-  const [clipTags, setClipTags] = useState("");
-  const [clipDescription, setClipDescription] = useState("");
+export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTime, onSave, onCancel, initialTitle = "", initialTags = "", initialDescription = "" }: ClipModalCardProps) {
+  const [clipTitle, setClipTitle] = useState(initialTitle);
+  const [clipTags, setClipTags] = useState(initialTags);
+  const [clipDescription, setClipDescription] = useState(initialDescription);
+
+  useEffect(() => {
+    setClipTitle(initialTitle);
+    setClipTags(initialTags);
+    setClipDescription(initialDescription);
+  }, [initialTitle, initialTags, initialDescription]);
 
   const handleSave = () => {
     onSave(clipTitle, clipTags, clipDescription);

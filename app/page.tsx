@@ -19,6 +19,10 @@ export default function Home() {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [thumbnail, setThumbnail] = useState("");
+  const [editingIndex, setEditingIndex] = useState<{type: 'clip' | 'annotation', index: number} | null>(null);
+
+  const clipColors = ['bg-blue-500/40', 'bg-green-500/40', 'bg-purple-500/40', 'bg-yellow-500/40', 'bg-red-500/40', 'bg-cyan-500/40', 'bg-orange-500/40', 'bg-indigo-500/40'];
+  const annotationColors = ['bg-pink-500/40', 'bg-rose-500/40', 'bg-fuchsia-500/40', 'bg-violet-500/40', 'bg-amber-500/40', 'bg-lime-500/40', 'bg-teal-500/40', 'bg-emerald-500/40'];
 
   useEffect(() => {
     if (videoRef.current) {
@@ -55,10 +59,23 @@ export default function Home() {
 
   const handleModalSave = (title: string, tags: string, description: string) => {
     const item = { start: clipStart, end: clipEnd, type: clipType, title, tags, description, thumbnail };
-    if (clipType === 'clip') {
-      setClips([...clips, item]);
+    if (editingIndex !== null) {
+      if (editingIndex.type === 'clip') {
+        const newClips = [...clips];
+        newClips[editingIndex.index] = item;
+        setClips(newClips);
+      } else {
+        const newAnnotations = [...annotations];
+        newAnnotations[editingIndex.index] = item;
+        setAnnotations(newAnnotations);
+      }
+      setEditingIndex(null);
     } else {
-      setAnnotations([...annotations, item]);
+      if (clipType === 'clip') {
+        setClips([...clips, item]);
+      } else {
+        setAnnotations([...annotations, item]);
+      }
     }
     setIsClipping(false);
     setShowModal(false);
@@ -126,20 +143,38 @@ export default function Home() {
               {clips.map((clip, i) => (
                 <div
                   key={i}
-                  className="absolute h-4 -top-1 bg-blue-500/40 pointer-events-none rounded"
+                  className={`absolute h-4 -top-1 ${clipColors[i % clipColors.length]} pointer-events-auto rounded cursor-pointer hover:h-5 hover:-top-1.5 transition-all`}
                   style={{
                     left: `${(clip.start / duration) * 100}%`,
                     width: `${((clip.end - clip.start) / duration) * 100}%`
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setClipStart(clip.start);
+                    setClipEnd(clip.end);
+                    setClipType('clip');
+                    setThumbnail(clip.thumbnail);
+                    setEditingIndex({type: 'clip', index: i});
+                    setShowModal(true);
                   }}
                 />
               ))}
               {annotations.map((ann, i) => (
                 <div
                   key={i}
-                  className="absolute h-4 -top-1 bg-pink-500/40 pointer-events-none rounded"
+                  className={`absolute h-4 -top-1 ${annotationColors[i % annotationColors.length]} pointer-events-auto rounded cursor-pointer hover:h-5 hover:-top-1.5 transition-all`}
                   style={{
                     left: `${(ann.start / duration) * 100}%`,
                     width: `${((ann.end - ann.start) / duration) * 100}%`
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setClipStart(ann.start);
+                    setClipEnd(ann.end);
+                    setClipType('annotation');
+                    setThumbnail(ann.thumbnail);
+                    setEditingIndex({type: 'annotation', index: i});
+                    setShowModal(true);
                   }}
                 />
               ))}
@@ -235,8 +270,12 @@ export default function Home() {
         <div className="flex justify-end gap-2 my-6">
           <Button color="primary" onPress={() => handleClip('clip')} isDisabled={isClipping}>Clip</Button>
           <Button color="primary" onPress={() => handleClip('annotation')} isDisabled={isClipping}>Annotate</Button>
-          <Button color="success" onPress={handleSave} isDisabled={!isClipping}>Save</Button>
-          <Button color="danger" variant="flat" onPress={() => setIsClipping(false)} isDisabled={!isClipping}>Cancel</Button>
+          {isClipping && (
+            <>
+              <Button color="success" onPress={handleSave}>Save</Button>
+              <Button color="danger" variant="flat" onPress={() => setIsClipping(false)}>Cancel</Button>
+            </>
+          )}
         </div>
 
         <Card className="bg-gray-900 border-gray-800">
@@ -308,7 +347,7 @@ export default function Home() {
         </Card>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="md" className="bg-gray-900 p-0">
+      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditingIndex(null); }} size="md" className="bg-gray-900 p-0">
         <ModalContent>
           <ClipModalCard
             thumbnail={thumbnail}
@@ -316,7 +355,10 @@ export default function Home() {
             clipEnd={clipEnd}
             formatTime={formatTime}
             onSave={handleModalSave}
-            onCancel={() => setShowModal(false)}
+            onCancel={() => { setShowModal(false); setEditingIndex(null); }}
+            initialTitle={editingIndex !== null ? (editingIndex.type === 'clip' ? clips[editingIndex.index]?.title : annotations[editingIndex.index]?.title) : ""}
+            initialTags={editingIndex !== null ? (editingIndex.type === 'clip' ? clips[editingIndex.index]?.tags : annotations[editingIndex.index]?.tags) : ""}
+            initialDescription={editingIndex !== null ? (editingIndex.type === 'clip' ? clips[editingIndex.index]?.description : annotations[editingIndex.index]?.description) : ""}
           />
         </ModalContent>
       </Modal>
