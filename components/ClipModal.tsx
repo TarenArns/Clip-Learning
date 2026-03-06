@@ -10,12 +10,13 @@ interface ClipModalCardProps {
   formatTime: (seconds: number) => string;
   onSave: (title: string, tags: string, description: string) => void;
   onCancel: () => void;
+  onDelete?: () => void;
   initialTitle?: string;
   initialTags?: string;
   initialDescription?: string;
 }
 
-export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTime, onSave, onCancel, initialTitle = "", initialTags = "", initialDescription = "" }: ClipModalCardProps) {
+export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTime, onSave, onCancel, onDelete, initialTitle = "", initialTags = "", initialDescription = "" }: ClipModalCardProps) {
   const [clipTitle, setClipTitle] = useState(initialTitle);
   const [clipTags, setClipTags] = useState(initialTags);
   const [clipDescription, setClipDescription] = useState(initialDescription);
@@ -65,6 +66,11 @@ export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTim
         classNames={{ input: "bg-gray-800", inputWrapper: "bg-gray-800" }}
       />
       <CardFooter className="flex justify-end gap-2">
+        {onDelete && (
+          <Button color="danger" onPress={onDelete}>
+            Delete
+          </Button>
+        )}
         <Button color="danger" variant="flat" onPress={onCancel}>
           Cancel
         </Button>
