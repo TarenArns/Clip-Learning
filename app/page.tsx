@@ -8,7 +8,9 @@ export default function Home() {
   const [isClipping, setIsClipping] = useState(false);
   const [clipStart, setClipStart] = useState(0);
   const [clipEnd, setClipEnd] = useState(5);
+  const [clipType, setClipType] = useState<'clip' | 'annotation'>('clip');
   const [clips, setClips] = useState<{ start: number, end: number, type: string, title: string, tags: string, description: string, thumbnail: string }[]>([]);
+  const [annotations, setAnnotations] = useState<{ start: number, end: number, type: string, title: string, tags: string, description: string, thumbnail: string }[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState(0);
@@ -24,10 +26,11 @@ export default function Home() {
     }
   }, []);
 
-  const handleClip = () => {
+  const handleClip = (type: 'clip' | 'annotation') => {
     if (videoRef.current) {
       setClipStart(0);
       setClipEnd(Math.min(30, duration));
+      setClipType(type);
       setIsClipping(true);
     }
   };
@@ -51,7 +54,12 @@ export default function Home() {
   };
 
   const handleModalSave = (title: string, tags: string, description: string) => {
-    setClips([...clips, { start: clipStart, end: clipEnd, type: 'clip', title, tags, description, thumbnail }]);
+    const item = { start: clipStart, end: clipEnd, type: clipType, title, tags, description, thumbnail };
+    if (clipType === 'clip') {
+      setClips([...clips, item]);
+    } else {
+      setAnnotations([...annotations, item]);
+    }
     setIsClipping(false);
     setShowModal(false);
     setThumbnail("");
@@ -125,10 +133,20 @@ export default function Home() {
                   }}
                 />
               ))}
+              {annotations.map((ann, i) => (
+                <div
+                  key={i}
+                  className="absolute h-4 -top-1 bg-pink-500/40 pointer-events-none rounded"
+                  style={{
+                    left: `${(ann.start / duration) * 100}%`,
+                    width: `${((ann.end - ann.start) / duration) * 100}%`
+                  }}
+                />
+              ))}
 
               {isClipping && (
                 <div
-                  className="absolute h-3 -top-0.5 border-2 border-blue-500 rounded hover:h-4 hover:-top-1 transition-all cursor-move pointer-events-auto"
+                  className={`absolute h-3 -top-0.5 border-2 ${clipType === 'clip' ? 'border-blue-500' : 'border-pink-500'} rounded hover:h-4 hover:-top-1 transition-all cursor-move pointer-events-auto`}
                   style={{
                     left: `${(clipStart / duration) * 100}%`,
                     width: `${((clipEnd - clipStart) / duration) * 100}%`
@@ -157,7 +175,7 @@ export default function Home() {
                   }}
                 >
                   <div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 ${clipType === 'clip' ? 'bg-blue-500' : 'bg-pink-500'} rounded cursor-ew-resize pointer-events-auto`}
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -179,7 +197,7 @@ export default function Home() {
                     }}
                   />
                   <div
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize pointer-events-auto"
+                    className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 ${clipType === 'clip' ? 'bg-blue-500' : 'bg-pink-500'} rounded cursor-ew-resize pointer-events-auto`}
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -215,8 +233,8 @@ export default function Home() {
         </div>
 
         <div className="flex justify-end gap-2 my-6">
-          <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Clip</Button>
-          <Button color="primary" onPress={handleClip} isDisabled={isClipping}>Annotate</Button>
+          <Button color="primary" onPress={() => handleClip('clip')} isDisabled={isClipping}>Clip</Button>
+          <Button color="primary" onPress={() => handleClip('annotation')} isDisabled={isClipping}>Annotate</Button>
           <Button color="success" onPress={handleSave} isDisabled={!isClipping}>Save</Button>
           <Button color="danger" variant="flat" onPress={() => setIsClipping(false)} isDisabled={!isClipping}>Cancel</Button>
         </div>
@@ -247,6 +265,40 @@ export default function Home() {
                   >
                     <div className="flex items-center justify-center">
                       <img src={clip.thumbnail} alt="Clip thumbnail" className="w-[80%] rounded" />
+                    </div>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </div>
+        </Card>
+
+        <Card className="bg-gray-900 border-gray-800 mt-6">
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-100">Annotations</h3>
+            {annotations.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">No annotations yet</div>
+            ) : (
+              <Accordion variant="splitted">
+                {annotations.map((ann, i) => (
+                  <AccordionItem
+                    key={i}
+                    indicator={<div className="text-6xl cursor-pointer">&lt;</div>}
+                    title={
+                      <div className="flex gap-3 items-start w-full cursor-pointer">
+                        <img src={ann.thumbnail} alt="Annotation thumbnail" className="w-48 h-32 object-cover rounded" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{ann.title}</h4>
+                          <p className="text-sm text-gray-400">{ann.tags}</p>
+                          <p className="text-xs text-gray-500 mt-1">{formatTime(ann.start)} - {formatTime(ann.end)}</p>
+                          <p className="text-sm text-gray-300 mt-2 text-left">{ann.description}</p>
+                        </div>
+                      </div>
+                    }
+                    className="bg-gray-800 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center">
+                      <img src={ann.thumbnail} alt="Annotation thumbnail" className="w-[80%] rounded" />
                     </div>
                   </AccordionItem>
                 ))}
