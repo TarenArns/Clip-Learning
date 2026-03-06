@@ -26,9 +26,8 @@ export default function Home() {
 
   const handleClip = () => {
     if (videoRef.current) {
-      const current = videoRef.current.currentTime;
-      setClipStart(current);
-      setClipEnd(Math.min(current + 5, duration));
+      setClipStart(0);
+      setClipEnd(Math.min(30, duration));
       setIsClipping(true);
     }
   };
@@ -116,12 +115,45 @@ export default function Home() {
             <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
               <div className="absolute h-full bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
 
+              {clips.map((clip, i) => (
+                <div
+                  key={i}
+                  className="absolute h-4 -top-1 bg-blue-500/40 pointer-events-none rounded"
+                  style={{
+                    left: `${(clip.start / duration) * 100}%`,
+                    width: `${((clip.end - clip.start) / duration) * 100}%`
+                  }}
+                />
+              ))}
+
               {isClipping && (
                 <div
-                  className="absolute h-full bg-blue-600 pointer-events-none"
+                  className="absolute h-3 -top-0.5 border-2 border-blue-500 rounded hover:h-4 hover:-top-1 transition-all cursor-move pointer-events-auto"
                   style={{
                     left: `${(clipStart / duration) * 100}%`,
                     width: `${((clipEnd - clipStart) / duration) * 100}%`
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const startX = e.clientX;
+                    const startClipStart = clipStart;
+                    const clipDuration = clipEnd - clipStart;
+                    const onMove = (me: MouseEvent) => {
+                      if (seekBarRef.current) {
+                        const rect = seekBarRef.current.getBoundingClientRect();
+                        const delta = ((me.clientX - startX) / rect.width) * duration;
+                        const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
+                        setClipStart(newStart);
+                        setClipEnd(newStart + clipDuration);
+                      }
+                    };
+                    const onUp = () => {
+                      document.removeEventListener('mousemove', onMove);
+                      document.removeEventListener('mouseup', onUp);
+                    };
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup', onUp);
                   }}
                 >
                   <div
