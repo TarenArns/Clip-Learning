@@ -23,6 +23,8 @@ export default function Home() {
   const [thumbnail, setThumbnail] = useState("");
   const [editingIndex, setEditingIndex] = useState<{type: 'clip' | 'annotation', index: number} | null>(null);
   const [hoveredAnnotation, setHoveredAnnotation] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('clip');
+  const [cardIndices, setCardIndices] = useState<{[key: string]: number}>({});
 
   const clipColors = ['bg-blue-500/40', 'bg-green-500/40', 'bg-purple-500/40', 'bg-yellow-500/40', 'bg-red-500/40', 'bg-cyan-500/40', 'bg-orange-500/40', 'bg-indigo-500/40'];
   const annotationColors = ['bg-pink-500/40', 'bg-rose-500/40', 'bg-fuchsia-500/40', 'bg-violet-500/40', 'bg-amber-500/40', 'bg-lime-500/40', 'bg-teal-500/40', 'bg-emerald-500/40'];
@@ -139,13 +141,33 @@ export default function Home() {
     }
   };
 
+  const groupedClips = clips.reduce((acc, clip) => {
+    const tag = clip.tags || 'Untagged';
+    if (!acc[tag]) acc[tag] = [];
+    acc[tag].push(clip);
+    return acc;
+  }, {} as {[key: string]: typeof clips});
+
+  const nextCard = (tag: string) => {
+    const current = cardIndices[tag] || 0;
+    const max = groupedClips[tag].length - 1;
+    setCardIndices({...cardIndices, [tag]: current < max ? current + 1 : 0});
+  };
+
+  const prevCard = (tag: string) => {
+    const current = cardIndices[tag] || 0;
+    const max = groupedClips[tag].length - 1;
+    setCardIndices({...cardIndices, [tag]: current > 0 ? current - 1 : max});
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 p-8">
-      <Tabs className="flex justify-center mb-8" radius="full" size="lg">
+      <Tabs className="flex justify-center mb-8" radius="full" size="lg" selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
         <Tab key="clip" title="Clip" />
         <Tab key="review" title="Review" />
       </Tabs>
 
+      {activeTab === 'clip' ? (
       <div className="max-w-6xl mx-auto">
         <div ref={videoContainerRef} className="bg-gray-900 rounded-lg overflow-hidden shadow-xl relative">
           <video
@@ -374,6 +396,71 @@ export default function Home() {
           </div>
         </Card>
       </div>
+      ) : (
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-100 mb-6">Review Clips by Tag</h2>
+          {Object.keys(groupedClips).length === 0 ? (
+            <div className="text-gray-500 text-center py-8">No clips to review</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(groupedClips).map(([tag, tagClips]) => {
+                const currentIndex = cardIndices[tag] || 0;
+                const currentClip = tagClips[currentIndex];
+                const clipIndex = clips.findIndex(c => c === currentClip);
+                return (
+                  <div key={tag} className="relative">
+                    <h3 className="text-lg font-semibold text-gray-100 mb-3">{tag}</h3>
+                    <div className="relative">
+                      {tagClips.map((clip, i) => {
+                        const offset = Math.abs(i - currentIndex);
+                        const isVisible = offset < 3;
+                        return isVisible ? (
+                          <div
+                            key={i}
+                            className="absolute w-full transition-all duration-300"
+                            style={{
+                              transform: `translateY(${offset * -20}px) scale(${1 - offset * 0.05}) translateX(${offset * 20}px)`,
+                              zIndex: tagClips.length - offset,
+                              opacity: i === currentIndex ? 1 : 0.5,
+                              pointerEvents: i === currentIndex ? 'auto' : 'none'
+                            }}
+                          >
+                            <Card
+                              className="bg-gray-900 border-gray-800 cursor-pointer hover:border-gray-600 transition-colors"
+                              isPressable
+                              onPress={() => {
+                                setClipStart(clip.start);
+                                setClipEnd(clip.end);
+                                setClipType('clip');
+                                setThumbnail(clip.thumbnail);
+                                setEditingIndex({type: 'clip', index: clipIndex});
+                                setShowModal(true);
+                              }}
+                            >
+                              <img src={clip.thumbnail} alt="Clip thumbnail" className="w-full aspect-video object-cover rounded-t-lg" />
+                              <div className="p-4">
+                                <h4 className="font-semibold text-gray-100">{clip.title}</h4>
+                                <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>
+                                <p className="text-sm text-gray-300 mt-2">{clip.description}</p>
+                              </div>
+                            </Card>
+                          </div>
+                        ) : null;
+                      })}
+                      <div style={{ height: '400px' }} />
+                    </div>
+                    <div className="flex justify-between mt-4">
+                      <Button size="sm" onPress={() => prevCard(tag)} isDisabled={tagClips.length <= 1}>←</Button>
+                      <span className="text-gray-400 text-sm">{currentIndex + 1} / {tagClips.length}</span>
+                      <Button size="sm" onPress={() => nextCard(tag)} isDisabled={tagClips.length <= 1}>→</Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditingIndex(null); }} size="md" className="bg-gray-900 p-0">
         <ModalContent>
