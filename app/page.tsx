@@ -25,6 +25,8 @@ export default function Home() {
   const [hoveredAnnotation, setHoveredAnnotation] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('clip');
   const [cardIndices, setCardIndices] = useState<{[key: string]: number}>({});
+  const [seekPreview, setSeekPreview] = useState<{time: number, x: number} | null>(null);
+  const [previewThumbnail, setPreviewThumbnail] = useState("");
 
   const clipColors = ['bg-blue-500/40', 'bg-green-500/40', 'bg-purple-500/40', 'bg-yellow-500/40', 'bg-red-500/40', 'bg-cyan-500/40', 'bg-orange-500/40', 'bg-indigo-500/40'];
   const annotationColors = ['bg-pink-500/40', 'bg-rose-500/40', 'bg-fuchsia-500/40', 'bg-violet-500/40', 'bg-amber-500/40', 'bg-lime-500/40', 'bg-teal-500/40', 'bg-emerald-500/40'];
@@ -131,6 +133,27 @@ export default function Home() {
     }
   };
 
+  const handleSeekBarHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    const time = pos * duration;
+    setSeekPreview({ time, x: e.clientX - rect.left });
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 160;
+    canvas.height = 90;
+    const ctx = canvas.getContext('2d');
+    const savedTime = videoRef.current.currentTime;
+    videoRef.current.currentTime = time;
+    videoRef.current.onseeked = () => {
+      ctx?.drawImage(videoRef.current!, 0, 0, canvas.width, canvas.height);
+      setPreviewThumbnail(canvas.toDataURL());
+      videoRef.current!.currentTime = savedTime;
+      videoRef.current!.onseeked = null;
+    };
+  };
+
   const cycleSpeed = () => {
     const speeds = [0.5, 1, 1.5, 2];
     const currentIndex = speeds.indexOf(playbackRate);
@@ -193,8 +216,18 @@ export default function Home() {
           )}
 
           <div className="bg-gray-800 p-4">
-            <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
+            <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek} onMouseMove={handleSeekBarHover} onMouseLeave={() => setSeekPreview(null)}>
               <div className="absolute h-full bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
+
+              {seekPreview && previewThumbnail && (
+                <div
+                  className="absolute bottom-6 -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 pointer-events-none z-50"
+                  style={{ left: `${seekPreview.x}px` }}
+                >
+                  <img src={previewThumbnail} alt="Preview" className="w-40 h-auto rounded" />
+                  <p className="text-xs text-gray-300 text-center mt-1">{formatTime(seekPreview.time)}</p>
+                </div>
+              )}
 
               {clips.map((clip, i) => (
                 <div
