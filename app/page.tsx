@@ -216,12 +216,16 @@ export default function Home() {
           )}
 
           <div className="bg-gray-800 p-4">
-            <div ref={seekBarRef} className="relative h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek} onMouseMove={handleSeekBarHover} onMouseLeave={() => setSeekPreview(null)}>
-              <div className="absolute h-full bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
-
+            <div className="flex ">
+              <div className="flex flex-col justify-between text-xs text-gray-400 w-16 pb-2">
+                <span>Progress</span>
+                <span>Clips</span>
+                <span>Notes</span>
+              </div>
+              <div ref={seekBarRef} className="relative flex-1" onMouseMove={handleSeekBarHover} onMouseLeave={() => setSeekPreview(null)}>
               {seekPreview && previewThumbnail && (
                 <div
-                  className="absolute bottom-6 -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 pointer-events-none z-50"
+                  className="absolute bottom-full mb-2 -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 pointer-events-none z-50"
                   style={{ left: `${seekPreview.x}px` }}
                 >
                   <img src={previewThumbnail} alt="Preview" className="w-40 h-auto rounded" />
@@ -229,88 +233,50 @@ export default function Home() {
                 </div>
               )}
 
-              {clips.map((clip, i) => (
-                <div
-                  key={i}
-                  className={`absolute h-4 -top-1 ${clipColors[i % clipColors.length]} pointer-events-auto rounded cursor-pointer hover:h-5 hover:-top-1.5 transition-all`}
-                  style={{
-                    left: `${(clip.start / duration) * 100}%`,
-                    width: `${((clip.end - clip.start) / duration) * 100}%`
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setClipStart(clip.start);
-                    setClipEnd(clip.end);
-                    setClipType('clip');
-                    setThumbnail(clip.thumbnail);
-                    setEditingIndex({type: 'clip', index: i});
-                    setShowModal(true);
-                  }}
-                />
-              ))}
-              {annotations.map((ann, i) => (
-                <div
-                  key={i}
-                  className={`absolute h-4 -top-1 ${annotationColors[i % annotationColors.length]} pointer-events-auto rounded cursor-pointer hover:h-5 hover:-top-1.5 transition-all`}
-                  style={{
-                    left: `${(ann.start / duration) * 100}%`,
-                    width: `${((ann.end - ann.start) / duration) * 100}%`
-                  }}
-                  onMouseEnter={() => setHoveredAnnotation(i)}
-                  onMouseLeave={() => setHoveredAnnotation(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setClipStart(ann.start);
-                    setClipEnd(ann.end);
-                    setClipType('annotation');
-                    setEditingIndex({type: 'annotation', index: i});
-                    setShowModal(true);
-                  }}
-                />
-              ))}
+              <div className="h-2 bg-gray-700 rounded cursor-pointer mb-3" onClick={handleSeek}>
+                <div className="absolute h-2 bg-gray-500 rounded" style={{ width: `${(currentTime / duration) * 100}%` }} />
+              </div>
 
-              {isClipping && (
-                <div
-                  className={`absolute h-3 -top-0.5 border-2 ${clipType === 'clip' ? 'border-blue-500' : 'border-pink-500'} rounded hover:h-4 hover:-top-1 transition-all cursor-move pointer-events-auto`}
-                  style={{
-                    left: `${(clipStart / duration) * 100}%`,
-                    width: `${((clipEnd - clipStart) / duration) * 100}%`
-                  }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const startX = e.clientX;
-                    const startClipStart = clipStart;
-                    const clipDuration = clipEnd - clipStart;
-                    const onMove = (me: MouseEvent) => {
-                      if (seekBarRef.current) {
-                        const rect = seekBarRef.current.getBoundingClientRect();
-                        const delta = ((me.clientX - startX) / rect.width) * duration;
-                        const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
-                        setClipStart(newStart);
-                        setClipEnd(newStart + clipDuration);
-                      }
-                    };
-                    const onUp = () => {
-                      document.removeEventListener('mousemove', onMove);
-                      document.removeEventListener('mouseup', onUp);
-                    };
-                    document.addEventListener('mousemove', onMove);
-                    document.addEventListener('mouseup', onUp);
-                  }}
-                >
+              <div className="relative h-2 bg-gray-700/50 rounded mb-3">
+                {clips.map((clip, i) => (
                   <div
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-6 ${clipType === 'clip' ? 'bg-blue-500' : 'bg-pink-500'} rounded cursor-ew-resize pointer-events-auto`}
+                    key={i}
+                    className={`absolute h-3 -top-0.5 ${clipColors[i % clipColors.length]} rounded cursor-pointer hover:h-4 hover:-top-1 transition-all`}
+                    style={{
+                      left: `${(clip.start / duration) * 100}%`,
+                      width: `${((clip.end - clip.start) / duration) * 100}%`
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setClipStart(clip.start);
+                      setClipEnd(clip.end);
+                      setClipType('clip');
+                      setThumbnail(clip.thumbnail);
+                      setEditingIndex({type: 'clip', index: i});
+                      setShowModal(true);
+                    }}
+                  />
+                ))}
+                {isClipping && clipType === 'clip' && (
+                  <div
+                    className="absolute h-3 -top-0.5 border-2 border-blue-500 rounded cursor-move hover:h-4 hover:-top-1 transition-all"
+                    style={{
+                      left: `${(clipStart / duration) * 100}%`,
+                      width: `${((clipEnd - clipStart) / duration) * 100}%`
+                    }}
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
                       const startX = e.clientX;
-                      const startVal = clipStart;
+                      const startClipStart = clipStart;
+                      const clipDuration = clipEnd - clipStart;
                       const onMove = (me: MouseEvent) => {
                         if (seekBarRef.current) {
                           const rect = seekBarRef.current.getBoundingClientRect();
                           const delta = ((me.clientX - startX) / rect.width) * duration;
-                          setClipStart(Math.max(0, Math.min(startVal + delta, clipEnd - 1)));
+                          const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
+                          setClipStart(newStart);
+                          setClipEnd(newStart + clipDuration);
                         }
                       };
                       const onUp = () => {
@@ -320,19 +286,96 @@ export default function Home() {
                       document.addEventListener('mousemove', onMove);
                       document.addEventListener('mouseup', onUp);
                     }}
-                  />
+                  >
+                    <div
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-8 bg-blue-500 rounded cursor-ew-resize"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startVal = clipStart;
+                        const onMove = (me: MouseEvent) => {
+                          if (seekBarRef.current) {
+                            const rect = seekBarRef.current.getBoundingClientRect();
+                            const delta = ((me.clientX - startX) / rect.width) * duration;
+                            setClipStart(Math.max(0, Math.min(startVal + delta, clipEnd - 1)));
+                          }
+                        };
+                        const onUp = () => {
+                          document.removeEventListener('mousemove', onMove);
+                          document.removeEventListener('mouseup', onUp);
+                        };
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-8 bg-blue-500 rounded cursor-ew-resize"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startVal = clipEnd;
+                        const onMove = (me: MouseEvent) => {
+                          if (seekBarRef.current) {
+                            const rect = seekBarRef.current.getBoundingClientRect();
+                            const delta = ((me.clientX - startX) / rect.width) * duration;
+                            setClipEnd(Math.max(clipStart + 1, Math.min(startVal + delta, duration)));
+                          }
+                        };
+                        const onUp = () => {
+                          document.removeEventListener('mousemove', onMove);
+                          document.removeEventListener('mouseup', onUp);
+                        };
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="relative h-2 bg-gray-700/50 rounded mb-3">
+                {annotations.map((ann, i) => (
                   <div
-                    className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-6 ${clipType === 'clip' ? 'bg-blue-500' : 'bg-pink-500'} rounded cursor-ew-resize pointer-events-auto`}
+                    key={i}
+                    className={`absolute h-3 -top-0.5 ${annotationColors[i % annotationColors.length]} rounded cursor-pointer hover:h-4 hover:-top-1 transition-all`}
+                    style={{
+                      left: `${(ann.start / duration) * 100}%`,
+                      width: `${((ann.end - ann.start) / duration) * 100}%`
+                    }}
+                    onMouseEnter={() => setHoveredAnnotation(i)}
+                    onMouseLeave={() => setHoveredAnnotation(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setClipStart(ann.start);
+                      setClipEnd(ann.end);
+                      setClipType('annotation');
+                      setEditingIndex({type: 'annotation', index: i});
+                      setShowModal(true);
+                    }}
+                  />
+                ))}
+                {isClipping && clipType === 'annotation' && (
+                  <div
+                    className="absolute h-3 -top-0.5 border-2 border-pink-500 rounded cursor-move hover:h-4 hover:-top-1 transition-all"
+                    style={{
+                      left: `${(clipStart / duration) * 100}%`,
+                      width: `${((clipEnd - clipStart) / duration) * 100}%`
+                    }}
                     onMouseDown={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
                       const startX = e.clientX;
-                      const startVal = clipEnd;
+                      const startClipStart = clipStart;
+                      const clipDuration = clipEnd - clipStart;
                       const onMove = (me: MouseEvent) => {
                         if (seekBarRef.current) {
                           const rect = seekBarRef.current.getBoundingClientRect();
                           const delta = ((me.clientX - startX) / rect.width) * duration;
-                          setClipEnd(Math.max(clipStart + 1, Math.min(startVal + delta, duration)));
+                          const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
+                          setClipStart(newStart);
+                          setClipEnd(newStart + clipDuration);
                         }
                       };
                       const onUp = () => {
@@ -342,9 +385,59 @@ export default function Home() {
                       document.addEventListener('mousemove', onMove);
                       document.addEventListener('mouseup', onUp);
                     }}
-                  />
-                </div>
-              )}
+                  >
+                    <div
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-8 bg-pink-500 rounded cursor-ew-resize"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startVal = clipStart;
+                        const onMove = (me: MouseEvent) => {
+                          if (seekBarRef.current) {
+                            const rect = seekBarRef.current.getBoundingClientRect();
+                            const delta = ((me.clientX - startX) / rect.width) * duration;
+                            setClipStart(Math.max(0, Math.min(startVal + delta, clipEnd - 1)));
+                          }
+                        };
+                        const onUp = () => {
+                          document.removeEventListener('mousemove', onMove);
+                          document.removeEventListener('mouseup', onUp);
+                        };
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-8 bg-pink-500 rounded cursor-ew-resize"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        const startX = e.clientX;
+                        const startVal = clipEnd;
+                        const onMove = (me: MouseEvent) => {
+                          if (seekBarRef.current) {
+                            const rect = seekBarRef.current.getBoundingClientRect();
+                            const delta = ((me.clientX - startX) / rect.width) * duration;
+                            setClipEnd(Math.max(clipStart + 1, Math.min(startVal + delta, duration)));
+                          }
+                        };
+                        const onUp = () => {
+                          document.removeEventListener('mousemove', onMove);
+                          document.removeEventListener('mouseup', onUp);
+                        };
+                        document.addEventListener('mousemove', onMove);
+                        document.addEventListener('mouseup', onUp);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="absolute top-0 bottom-3 w-0.5 bg-gray-300 pointer-events-none z-10" style={{ left: `${(currentTime / duration) * 100}%` }}>
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-300 rounded-full" />
+              </div>
+            </div>
             </div>
 
             <div className="flex items-center gap-4 text-gray-200">
