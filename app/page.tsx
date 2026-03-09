@@ -139,19 +139,6 @@ export default function Home() {
     const pos = (e.clientX - rect.left) / rect.width;
     const time = pos * duration;
     setSeekPreview({ time, x: e.clientX - rect.left });
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = 160;
-    canvas.height = 90;
-    const ctx = canvas.getContext('2d');
-    const savedTime = videoRef.current.currentTime;
-    videoRef.current.currentTime = time;
-    videoRef.current.onseeked = () => {
-      ctx?.drawImage(videoRef.current!, 0, 0, canvas.width, canvas.height);
-      setPreviewThumbnail(canvas.toDataURL());
-      videoRef.current!.currentTime = savedTime;
-      videoRef.current!.onseeked = null;
-    };
   };
 
   const cycleSpeed = () => {
