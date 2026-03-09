@@ -4,6 +4,7 @@ import { Tabs, Tab, Button, Card, Modal, ModalContent, Accordion, AccordionItem 
 import { useState, useRef, useEffect } from "react";
 import ClipModalCard from "../components/ClipModal";
 import AnnotationModalCard from "../components/AnnotationModal";
+import ClipPlayer from "../components/ClipPlayer";
 
 export default function Home() {
   const [isClipping, setIsClipping] = useState(false);
@@ -472,8 +473,8 @@ export default function Home() {
                     }
                     className="bg-gray-800 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center">
-                      <img src={clip.thumbnail} alt="Clip thumbnail" className="w-[80%] rounded" />
+                    <div className="flex items-center justify-center w-full">
+                      <ClipPlayer src="/01-FieldStudiesI.mp4" start={clip.start} end={clip.end} className="w-[80%] aspect-video" />
                     </div>
                   </AccordionItem>
                 ))}
@@ -538,23 +539,28 @@ export default function Home() {
                               pointerEvents: i === currentIndex ? 'auto' : 'none'
                             }}
                           >
-                            <Card
-                              className="bg-gray-900 border-gray-800 cursor-pointer hover:border-gray-600 transition-colors"
-                              isPressable
-                              onPress={() => {
-                                setClipStart(clip.start);
-                                setClipEnd(clip.end);
-                                setClipType('clip');
-                                setThumbnail(clip.thumbnail);
-                                setEditingIndex({type: 'clip', index: clipIndex});
-                                setShowModal(true);
-                              }}
-                            >
-                              <img src={clip.thumbnail} alt="Clip thumbnail" className="w-full aspect-video object-cover rounded-t-lg" />
-                              <div className="p-4">
+                            <Card className="bg-gray-900 border-gray-800">
+                              <ClipPlayer src="/01-FieldStudiesI.mp4" start={clip.start} end={clip.end} className="w-full aspect-video rounded-t-lg" />
+                              <div className="p-4 text-center">
                                 <h4 className="font-semibold text-gray-100">{clip.title}</h4>
                                 <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>
                                 <p className="text-sm text-gray-300 mt-2">{clip.description}</p>
+                                <Button
+                                  size="sm"
+                                  color="primary"
+                                  variant="flat"
+                                  className="mt-3"
+                                  onPress={() => {
+                                    setClipStart(clip.start);
+                                    setClipEnd(clip.end);
+                                    setClipType('clip');
+                                    setThumbnail(clip.thumbnail);
+                                    setEditingIndex({type: 'clip', index: clipIndex});
+                                    setShowModal(true);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
                               </div>
                             </Card>
                           </div>
