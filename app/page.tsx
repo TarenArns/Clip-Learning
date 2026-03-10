@@ -166,6 +166,18 @@ export default function Home() {
     }
   };
 
+  const clampToNonOverlapping = (start: number, end: number, type: 'clip' | 'annotation') => {
+    const items = type === 'clip' ? clips : annotations;
+    
+    for (const item of items) {
+      if (start < item.end && end > item.start) {
+        return null;
+      }
+    }
+    
+    return { start, end };
+  };
+
   const filteredClips = clips.filter(clip => {
     const query = searchQuery.toLowerCase();
     return clip.title.toLowerCase().includes(query) || clip.tags.toLowerCase().includes(query);
@@ -282,9 +294,12 @@ export default function Home() {
                         if (seekBarRef.current) {
                           const rect = seekBarRef.current.getBoundingClientRect();
                           const delta = ((me.clientX - startX) / rect.width) * duration;
-                          const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
-                          setClipStart(newStart);
-                          setClipEnd(newStart + clipDuration);
+                          let newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
+                          const clamped = clampToNonOverlapping(newStart, newStart + clipDuration, 'clip');
+                          if (clamped) {
+                            setClipStart(clamped.start);
+                            setClipEnd(clamped.end);
+                          }
                         }
                       };
                       const onUp = () => {
@@ -306,7 +321,9 @@ export default function Home() {
                           if (seekBarRef.current) {
                             const rect = seekBarRef.current.getBoundingClientRect();
                             const delta = ((me.clientX - startX) / rect.width) * duration;
-                            setClipStart(Math.max(0, Math.min(startVal + delta, clipEnd - 1)));
+                            let newStart = Math.max(0, Math.min(startVal + delta, clipEnd - 1));
+                            const clamped = clampToNonOverlapping(newStart, clipEnd, 'clip');
+                            if (clamped) setClipStart(clamped.start);
                           }
                         };
                         const onUp = () => {
@@ -328,7 +345,9 @@ export default function Home() {
                           if (seekBarRef.current) {
                             const rect = seekBarRef.current.getBoundingClientRect();
                             const delta = ((me.clientX - startX) / rect.width) * duration;
-                            setClipEnd(Math.max(clipStart + 1, Math.min(startVal + delta, duration)));
+                            let newEnd = Math.max(clipStart + 1, Math.min(startVal + delta, duration));
+                            const clamped = clampToNonOverlapping(clipStart, newEnd, 'clip');
+                            if (clamped) setClipEnd(clamped.end);
                           }
                         };
                         const onUp = () => {
@@ -381,9 +400,12 @@ export default function Home() {
                         if (seekBarRef.current) {
                           const rect = seekBarRef.current.getBoundingClientRect();
                           const delta = ((me.clientX - startX) / rect.width) * duration;
-                          const newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
-                          setClipStart(newStart);
-                          setClipEnd(newStart + clipDuration);
+                          let newStart = Math.max(0, Math.min(startClipStart + delta, duration - clipDuration));
+                          const clamped = clampToNonOverlapping(newStart, newStart + clipDuration, 'annotation');
+                          if (clamped) {
+                            setClipStart(clamped.start);
+                            setClipEnd(clamped.end);
+                          }
                         }
                       };
                       const onUp = () => {
@@ -405,7 +427,9 @@ export default function Home() {
                           if (seekBarRef.current) {
                             const rect = seekBarRef.current.getBoundingClientRect();
                             const delta = ((me.clientX - startX) / rect.width) * duration;
-                            setClipStart(Math.max(0, Math.min(startVal + delta, clipEnd - 1)));
+                            let newStart = Math.max(0, Math.min(startVal + delta, clipEnd - 1));
+                            const clamped = clampToNonOverlapping(newStart, clipEnd, 'annotation');
+                            if (clamped) setClipStart(clamped.start);
                           }
                         };
                         const onUp = () => {
@@ -427,7 +451,9 @@ export default function Home() {
                           if (seekBarRef.current) {
                             const rect = seekBarRef.current.getBoundingClientRect();
                             const delta = ((me.clientX - startX) / rect.width) * duration;
-                            setClipEnd(Math.max(clipStart + 1, Math.min(startVal + delta, duration)));
+                            let newEnd = Math.max(clipStart + 1, Math.min(startVal + delta, duration));
+                            const clamped = clampToNonOverlapping(clipStart, newEnd, 'annotation');
+                            if (clamped) setClipEnd(clamped.end);
                           }
                         };
                         const onUp = () => {
