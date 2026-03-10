@@ -14,6 +14,7 @@ export default function Home() {
   const [clips, setClips] = useState<{ start: number, end: number, type: string, title: string, tags: string, description: string, thumbnail: string }[]>([]);
   const [annotations, setAnnotations] = useState<{ start: number, end: number, type: string, title: string, tags: string, keyTerms: string, questions: string }[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState(0);
@@ -135,11 +136,23 @@ export default function Home() {
   };
 
   const handleSeekBarHover = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!videoRef.current) return;
+    if (!previewVideoRef.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
     const time = pos * duration;
     setSeekPreview({ time, x: e.clientX - rect.left });
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = previewVideoRef.current.videoWidth;
+    canvas.height = previewVideoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    previewVideoRef.current.currentTime = time;
+    previewVideoRef.current.onseeked = () => {
+      ctx?.drawImage(previewVideoRef.current!, 0, 0, canvas.width, canvas.height);
+      setPreviewThumbnail(canvas.toDataURL());
+      previewVideoRef.current!.onseeked = null;
+    };
   };
 
   const cycleSpeed = () => {
@@ -180,6 +193,7 @@ export default function Home() {
 
       {activeTab === 'clip' ? (
       <div className="max-w-6xl mx-auto">
+        <video ref={previewVideoRef} src="/01-FieldStudiesI.mp4" className="hidden" preload="metadata" />
         <div ref={videoContainerRef} className="bg-gray-900 rounded-lg overflow-hidden shadow-xl relative">
           <video
             ref={videoRef}
