@@ -190,6 +190,15 @@ export default function Home() {
     return acc;
   }, {} as {[key: string]: typeof clips});
 
+  useEffect(() => {
+    const newIndices: {[key: string]: number} = {};
+    Object.keys(groupedClips).forEach(tag => {
+      const currentIndex = cardIndices[tag] || 0;
+      newIndices[tag] = Math.min(currentIndex, groupedClips[tag].length - 1);
+    });
+    setCardIndices(newIndices);
+  }, [searchQuery]);
+
   const nextCard = (tag: string) => {
     const current = cardIndices[tag] || 0;
     const max = groupedClips[tag].length - 1;
