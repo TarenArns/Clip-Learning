@@ -29,6 +29,7 @@ export default function Home() {
   const [cardIndices, setCardIndices] = useState<{[key: string]: number}>({});
   const [seekPreview, setSeekPreview] = useState<{time: number, x: number} | null>(null);
   const [previewThumbnail, setPreviewThumbnail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const clipColors = ['bg-blue-500/40', 'bg-green-500/40', 'bg-purple-500/40', 'bg-yellow-500/40', 'bg-red-500/40', 'bg-cyan-500/40', 'bg-orange-500/40', 'bg-indigo-500/40'];
   const annotationColors = ['bg-pink-500/40', 'bg-rose-500/40', 'bg-fuchsia-500/40', 'bg-violet-500/40', 'bg-amber-500/40', 'bg-lime-500/40', 'bg-teal-500/40', 'bg-emerald-500/40'];
@@ -165,7 +166,12 @@ export default function Home() {
     }
   };
 
-  const groupedClips = clips.reduce((acc, clip) => {
+  const filteredClips = clips.filter(clip => {
+    const query = searchQuery.toLowerCase();
+    return clip.title.toLowerCase().includes(query) || clip.tags.toLowerCase().includes(query);
+  });
+
+  const groupedClips = filteredClips.reduce((acc, clip) => {
     const tag = clip.tags || 'Untagged';
     if (!acc[tag]) acc[tag] = [];
     acc[tag].push(clip);
@@ -526,7 +532,16 @@ export default function Home() {
       </div>
       ) : (
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-100 mb-6">Review Clips by Tag</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-100">Review Clips by Tag</h2>
+            <input
+              type="text"
+              placeholder="Search by tag or title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+            />
+          </div>
           {Object.keys(groupedClips).length === 0 ? (
             <div className="text-gray-500 text-center py-8">No clips to review</div>
           ) : (
