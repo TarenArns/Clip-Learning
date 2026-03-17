@@ -42,8 +42,18 @@ export default function Home() {
 
   const handleClip = (type: 'clip' | 'annotation') => {
     if (videoRef.current) {
-      setClipStart(0);
-      setClipEnd(Math.min(30, duration));
+      const items = type === 'clip' ? clips : annotations;
+      let start = 0;
+      
+      for (const item of items) {
+        if (item.start === 0) {
+          start = item.end;
+          break;
+        }
+      }
+      
+      setClipStart(start);
+      setClipEnd(Math.min(start + 30, duration));
       setClipType(type);
       setIsClipping(true);
     }
@@ -220,12 +230,12 @@ export default function Home() {
 
       {activeTab === 'clip' ? (
       <div className="max-w-6xl mx-auto">
-        <video ref={previewVideoRef} src="/01-FieldStudiesI.mp4" className="hidden" preload="metadata" />
+        <video ref={previewVideoRef} src="/ExperimentVideo.mp4" className="hidden" preload="metadata" />
         <div ref={videoContainerRef} className="bg-gray-900 rounded-lg overflow-hidden shadow-xl relative">
           <video
             ref={videoRef}
             className="w-full aspect-video"
-            src="/01-FieldStudiesI.mp4"
+            src="/ExperimentVideo.mp4"
             preload="metadata"
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -254,10 +264,10 @@ export default function Home() {
               <div ref={seekBarRef} className="relative flex-1" onMouseMove={handleSeekBarHover} onMouseLeave={() => setSeekPreview(null)}>
               {seekPreview && previewThumbnail && (
                 <div
-                  className="absolute bottom-full mb-2 -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 pointer-events-none z-50"
-                  style={{ left: `${seekPreview.x}px` }}
+                  className="absolute bottom-full mb-2 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-2 pointer-events-none z-50"
+                  style={{ left: `${Math.max(80, Math.min(seekPreview.x, seekBarRef.current ? seekBarRef.current.offsetWidth - 80 : seekPreview.x))}px`, transform: 'translateX(-50%)' }}
                 >
-                  <img src={previewThumbnail} alt="Preview" className="w-40 h-auto rounded" />
+                  <img src={previewThumbnail} alt="Preview" className="w-full h-auto rounded" />
                   <p className="text-xs text-gray-300 text-center mt-1">{formatTime(seekPreview.time)}</p>
                 </div>
               )}
@@ -529,7 +539,7 @@ export default function Home() {
                     className="bg-gray-800 cursor-pointer"
                   >
                     <div className="flex items-center justify-center w-full">
-                      <ClipPlayer src="/01-FieldStudiesI.mp4" start={clip.start} end={clip.end} className="w-[80%] aspect-video" />
+                      <ClipPlayer src="/ExperimentVideo.mp4" start={clip.start} end={clip.end} className="w-[80%] aspect-video" />
                     </div>
                   </AccordionItem>
                 ))}
@@ -604,7 +614,7 @@ export default function Home() {
                             }}
                           >
                             <Card className="bg-gray-900 border-gray-800">
-                              <ClipPlayer src="/01-FieldStudiesI.mp4" start={clip.start} end={clip.end} className="w-full aspect-video rounded-t-lg" />
+                              <ClipPlayer src="/ExperimentVideo.mp4" start={clip.start} end={clip.end} className="w-full aspect-video rounded-t-lg" />
                               <div className="p-4 text-center">
                                 <h4 className="font-semibold text-gray-100">{clip.title}</h4>
                                 <p className="text-xs text-gray-500 mt-1">{formatTime(clip.start)} - {formatTime(clip.end)}</p>

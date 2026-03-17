@@ -37,7 +37,7 @@ export default function ClipModalCard({ thumbnail, clipStart, clipEnd, formatTim
 
   return (
     <Card className="bg-gray-900 border-gray-800">
-      <ClipPlayer src="/01-FieldStudiesI.mp4" start={clipStart} end={clipEnd} className="w-full aspect-video" />
+      <ClipPlayer src="/ExperimentVideo.mp4" start={clipStart} end={clipEnd} className="w-full aspect-video" />
       <div className="bg-gray-800 rounded-lg p-4">
         <p className="text-gray-300 text-sm">Time Range: {formatTime(clipStart)} - {formatTime(clipEnd)}</p>
       </div>
